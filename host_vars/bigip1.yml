@@ -1,9 +1,4 @@
 tenants:
-  TENANT:
+  dave:
     apps:
-      - APP-https-temp
-      - APP-dns
-
-# common:
-#   objects:
-#     - iRule-random
+      - APP-forward-net

@@ -1,0 +1,7 @@
+backup_dir: "{{ playbook_dir }}/backup"
+
+global:
+  common:
+    objects:
+      - FL4-forward
+      - profiles
