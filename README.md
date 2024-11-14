@@ -41,3 +41,11 @@ After replacing it in `roles/bigip_as3_gen/as3-schema.json`, you have to remove 
 
 ### Reference
 Can be found under [REFERENCE.md](REFERENCE.md)
+
+### General Tips/Tricks/Issues
+
+in mac, you may get an error around fork()
+set this in your zsh or bashrc file
+```OBJC_DISABLE_INITIALIZE_FORK_SAFETY=YES```
+
+- Mac seems to have issues with vmware pvim pvmomi python modules.
