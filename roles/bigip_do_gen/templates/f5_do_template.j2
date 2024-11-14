@@ -1,0 +1,58 @@
+$schema: https://raw.githubusercontent.com/F5Networks/f5-declarative-onboarding/master/src/schema/latest/base.schema.json
+schemaVersion: 1.9.0
+class: "Device"
+async: true
+label: "{{ label }}"
+Common:
+    class: "Tenant"
+    hostname: "{{ hostname }}"
+    myLicense:
+        class: "License"
+        licenseType: "{{ license_type }}"
+{% if regKey %}
+        regKey: "{{ regKey }}"
+{% endif %}
+    myDns:
+        class: "DNS"
+        nameServers:
+{% for dns_server in dns_servers %}
+        - "{{ dns_server }}"
+{% endfor %}
+        search:
+{% for domain in search_domains %}
+        - "{{ domain }}"
+{% endfor %}
+    myNtp:
+        class: "NTP"
+        servers:
+{% for ntp_server in ntp_servers %}
+        - "{{ ntp_server }}"
+{% endfor %}
+        timezone: "{{ timezone }}"
+{% if vlans %}
+{% for vlan_name, vlan_data in vlans.items() %}
+    {{ vlan_name }}:
+        class: "VLAN"
+        tag: {{ vlan_data.tag }}
+        mtu: {{ vlan_data.mtu }}
+        interfaces:
+{% for interface in vlan_data.interfaces %}
+            - name: "{{ interface.name }}"
+              tagged: {{ interface.tagged|lower }}
+{% endfor %}
+{% endfor %}
+{% endif %}
+{% for self_ip_name, self_ip_data in self_ips.items() %}
+    {{ self_ip_name }}:
+        class: "SelfIp"
+        address: "{{ self_ip_data.address }}"
+        vlan: "{{ self_ip_data.vlan }}"
+        allowService: "{{ self_ip_data.allow_service }}"
+        trafficGroup: "{{ self_ip_data.traffic_group }}"
+{% endfor %}
+{% if log_level %}
+controls:
+    class: "Controls"
+    logLevel: "{{ log_level }}"
+    trace: {{ trace|lower }}
+{% endif %}

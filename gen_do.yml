@@ -1,0 +1,20 @@
+---
+- name: Build BIGIP DO configuration
+  hosts: all
+  connection: local
+  gather_facts: no
+
+  tasks:
+    - name: Generate DO folders
+      file:
+        path: "{{ item }}"
+        state: directory
+      loop:
+        - "{{ backup_dir }}"
+        - "{{ backup_dir }}/json"
+        - "{{ backup_dir }}/yaml"
+      run_once: yes
+
+    - name: generate DO
+      import_role:
+        name: bigip_do_gen

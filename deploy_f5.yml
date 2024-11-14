@@ -1,0 +1,41 @@
+---
+- name: Deploy F5 OVA to ESXi with Multiple Networks and EULA Acceptance
+  hosts: localhost
+  gather_facts: no
+  vars:
+    ansible_python_interpreter: /Users/dmccauley/development/ansible/bin/python3
+    esxi_hostname: "192.168.86.51"
+    esxi_username: "root"
+    esxi_password: "1Pringles!"
+    datastore: "ISO"  # Specify the datastore on the ESXi host where the VM will be stored
+    ova_path: "/srv/nfs3/iso/BIGIP-17.1.1.4-0.0.9.ALL-vmware.ova"
+    vm_name: "BIGIP-LAB-02"
+    vm_networks:
+      network1: "VM Network"
+      network2: "vlan101"
+      network3: "vlan102"
+
+  tasks:
+    - name: Deploy OVA file to ESXi with Multiple Networks and EULA Acceptance
+      community.vmware.vmware_deploy_ovf:
+        hostname: "{{ esxi_hostname }}"
+        username: "{{ esxi_username }}"
+        password: "{{ esxi_password }}"
+        validate_certs: no
+        ovf: "{{ ova_path }}"
+        name: "{{ vm_name }}"
+        datastore: "{{ datastore }}"
+        networks: "{{ vm_networks }}"
+        wait_for_ip_address: yes
+      delegate_to: localhost
+
+    - name: Power on the VM
+      community.vmware.vmware_guest_powerstate:
+        hostname: "{{ esxi_hostname }}"
+        username: "{{ esxi_username }}"
+        password: "{{ esxi_password }}"
+        validate_certs: no
+        name: "{{ vm_name }}"
+        state: poweredon
+      delegate_to: localhost
+

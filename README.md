@@ -17,6 +17,19 @@ You should be able to create your own templates easily under [roles/bigip_as3_ge
   - `name: ansible.utils`
     `version: 2.2.0`
 
+### Installation
+
+#### Create Python Virtual Environment
+```python3 -m venv ansible```
+
+#### Enter the venv
+``` source ansible\bin\activate```
+
+#### Install ansible and dependencies
+```python -m pip install --upgrade pip```
+```python3 -m pip install ansible```
+```python3 -m pip install jsonschema```
+
 #### Usage:
 
 - Run `ansible-playbook gen_playbook.yml` to generate AS3 configs in `backup/` directory (directory is auto generated) in JSON and YAML format

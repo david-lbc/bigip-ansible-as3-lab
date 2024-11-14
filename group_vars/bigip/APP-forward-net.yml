@@ -12,5 +12,3 @@ APP-forward-net:
     l4:
       name: /Common/Shared/FL4-forward
       location: common
-  vlans:
-    - /Common/vlan2

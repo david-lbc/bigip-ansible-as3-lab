@@ -4,4 +4,3 @@ global:
   common:
     objects:
       - FL4-forward
-      - profiles
