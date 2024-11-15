@@ -21,7 +21,7 @@
         username: "{{ esxi_username }}"
         password: "{{ esxi_password }}"
         validate_certs: no
-        uri: "{{ ova_path }}"
+        url: "{{ ova_path }}"
         name: "{{ vm_name }}"
         datastore: "{{ datastore }}"
         networks: "{{ vm_networks }}"
