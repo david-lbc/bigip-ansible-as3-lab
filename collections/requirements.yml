@@ -2,6 +2,7 @@
 collections:
   - name: ansible.utils
     version: "2.9.0"  # For additional utilities that may be useful.
+  - name: community.vmware
 
 roles:
   # Add any specific roles from Galaxy or a Git repository if required.
