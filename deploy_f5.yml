@@ -6,7 +6,7 @@
     esxi_hostname: "192.168.86.51"
     esxi_username: "root"
     esxi_password: "1Pringles!"
-    datastore: "ISO"  # Specify the datastore on the ESXi host where the VM will be stored
+    datastore: "SSD"  # Specify the datastore on the ESXi host where the VM will be stored
     ova_path: "http://192.168.86.1/srv/nfs3/iso/BIGIP-17.1.1.4-0.0.9.ALL-vmware.ova"
     vm_name: "BIGIP-LAB-02"
     vm_networks:
