@@ -25,8 +25,22 @@
         name: "{{ vm_name }}"
         datastore: "{{ datastore }}"
         networks: "{{ vm_networks }}"
-        wait_for_ip_address: yes
+        wait_for_ip_address: no
       delegate_to: localhost
+
+    - name: Verify VM Deployment
+      community.vmware.vmware_guest_info:
+        hostname: "{{ esxi_hostname }}"
+        username: "{{ esxi_username }}"
+        password: "{{ esxi_password }}"
+        validate_certs: no
+        name: "{{ vm_name }}"
+      register: vm_info
+      delegate_to: localhost
+
+    - name: Debug VM Information
+      debug:
+        msg: "VM Deployment Successful. VM Info: {{ vm_info }}"
 
     - name: Power on the VM
       community.vmware.vmware_guest_powerstate:
