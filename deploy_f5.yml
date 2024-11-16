@@ -29,7 +29,6 @@
         datastore: "{{ datastore }}"
         networks: "{{ vm_networks }}"
         wait_for_ip_address: no
-        accept_all_eula: true  # Automatically accepts the EULA
         properties:  # OVF properties for management configuration
           mgmt-ip: "{{ mgmt_ip }}"
           mgmt-netmask: "{{ mgmt_netmask }}"
