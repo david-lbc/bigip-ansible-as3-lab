@@ -9,6 +9,9 @@
     datastore: "ssd"  # Specify the datastore on the ESXi host where the VM will be stored
     ova_path: "http://192.168.86.1/srv/nfs3/iso/BIGIP-17.1.1.4-0.0.9.ALL-vmware.ova"
     vm_name: "BIGIP-LAB-02"
+    mgmt_ip: "192.168.86.60"  # Replace with the desired management IP address
+    mgmt_netmask: "255.255.255.0"  # Replace with the desired netmask
+    mgmt_gateway: "192.168.86.1"  # Replace with the desired gateway
     vm_networks:
       network1: "VM Network"
       network2: "vlan101"
@@ -26,6 +29,11 @@
         datastore: "{{ datastore }}"
         networks: "{{ vm_networks }}"
         wait_for_ip_address: no
+        accept_all_eula: true  # Automatically accepts the EULA
+        properties:  # OVF properties for management configuration
+          mgmt-ip: "{{ mgmt_ip }}"
+          mgmt-netmask: "{{ mgmt_netmask }}"
+          mgmt-gateway: "{{ mgmt_gateway }}"
       delegate_to: localhost
 
     - name: Verify VM Deployment
