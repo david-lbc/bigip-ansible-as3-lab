@@ -13,9 +13,10 @@
     mgmt_netmask: "255.255.255.0"  # Replace with the desired netmask
     mgmt_gateway: "192.168.86.1"  # Replace with the desired gateway
     vm_networks:
-      network1: "VM Network"
-      network2: "vlan101"
-      network3: "vlan102"
+      Management: "VM Network"
+      Internal: "vlan101"
+      External: "vlan102"
+      HA: "vlan102"
 
   tasks:
     - name: Deploy OVA file to ESXi with Multiple Networks and EULA Acceptance
