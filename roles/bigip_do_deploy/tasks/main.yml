@@ -1,32 +1,50 @@
-- name: Deploy DO to BIGIP
+---
+- name: Require generated DO JSON
+  stat:
+    path: "{{ do_backup_dir }}/json/{{ inventory_hostname }}.json"
+  register: do_declaration_file
+
+- name: Stop when DO declaration has not been generated
+  assert:
+    that:
+      - do_declaration_file.stat.exists
+    fail_msg: "Run ansible-playbook gen_do.yml before deploying DO."
+
+- name: Deploy DO declaration to BIG-IP
   uri:
-    url: "https://{{ hostvars[inventory_hostname].ansible_host }}/mgmt/shared/declarative-onboarding?async=true"
+    url: "https://{{ ansible_host }}:{{ bigip_mgmt_port }}/mgmt/shared/declarative-onboarding"
     method: POST
     user: "{{ admin_user }}"
     password: "{{ admin_password }}"
-    validate_certs: no
-    body: "{{ lookup('file', '{{ backup_dir }}/json/{{ inventory_hostname }}_do.json') }}"
+    validate_certs: "{{ bigip_validate_certs }}"
+    body: "{{ lookup('file', do_backup_dir ~ '/json/' ~ inventory_hostname ~ '.json') }}"
     body_format: json
     status_code: [200, 202]
-  register: result
-  no_log: false
-  
-- name: Wait for task completion
+  register: do_submit
+  no_log: "{{ bigip_hide_sensitive_logs | default(true) }}"
+
+- name: Wait for DO task completion
   uri:
-    url: "https://{{ hostvars[inventory_hostname].ansible_host }}/mgmt/shared/declarative-onboarding/"
-    status_code: [200, 202]
+    url: "https://{{ ansible_host }}:{{ bigip_mgmt_port }}/mgmt/shared/declarative-onboarding/task/{{ do_submit.json.id }}"
+    method: GET
     user: "{{ admin_user }}"
     password: "{{ admin_password }}"
-    validate_certs: no
-  register: response
-  no_log: false
-  until: response.json.result.message != "processing"
-  retries: 10
-  delay: 10
-  
-- name: Print result
+    validate_certs: "{{ bigip_validate_certs }}"
+    status_code: 200
+  register: do_response
+  no_log: "{{ bigip_hide_sensitive_logs | default(true) }}"
+  until: do_response.json.result.status is defined and do_response.json.result.status != "RUNNING"
+  retries: "{{ do_task_retries | default(30) }}"
+  delay: "{{ do_task_delay | default(10) }}"
+  when: do_submit.json.id is defined
+  failed_when: >
+    do_response.json.result.code is defined and
+    (do_response.json.result.code | int) >= 400
+
+- name: Print DO result
   debug:
-    var: response.json.result.message
-  # 422 is invalid configuration
-  failed_when: response.status == 422 or (response.json.result.message != "success" and response.json.result.message != "no change")
-  changed_when: response.json.result.message == "success"
+    msg:
+      device: "{{ inventory_hostname }}"
+      task_id: "{{ do_submit.json.id | default('inline') }}"
+      status: "{{ do_response.json.result.status | default(do_submit.json.result.status | default('unknown')) }}"
+      message: "{{ do_response.json.result.message | default(do_submit.json.result.message | default('')) }}"

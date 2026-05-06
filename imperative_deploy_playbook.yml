@@ -1,0 +1,10 @@
+---
+- name: Deploy non-AS3 BIG-IP module deployment
+  hosts: bigip
+  connection: local
+  gather_facts: no
+
+  tasks:
+    - name: Deploy imperative BIG-IP objects
+      import_role:
+        name: bigip_imperative_deploy

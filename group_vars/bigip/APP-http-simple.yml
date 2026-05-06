@@ -1,0 +1,25 @@
+APP-http-simple:
+  type: http
+  name: VS-http-simple
+  persistenceMethods: none
+  snat: auto
+  vips:
+    - ip: 10.10.10.2
+  pool:
+    name: Pool-http-simple
+    lbMode: round-robin
+    members:
+      - addr: 10.10.10.3
+        port: 80
+      - addr: 10.10.10.4
+        port: 80
+    monitors:
+      - name: /Common/http
+        location: common
+  profile:
+    http:
+      name: /Common/http
+    tcp:
+      name: /Common/tcp
+  vlans:
+    - /Common/vlan1

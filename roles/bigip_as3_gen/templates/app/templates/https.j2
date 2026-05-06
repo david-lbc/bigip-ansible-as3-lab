@@ -72,7 +72,7 @@
 {% endif %}
 {# SNAT_Pool #}
 {% if app_vars.snat is defined and app_vars.snat.snatAddresses is defined %}
-{%     with vars = app_vars.profile.snat %}
+{%     with vars = app_vars.snat %}
 {%         include 'app/objects/snat_pool.j2' %}
 {%     endwith %}
 {% endif %}

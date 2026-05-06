@@ -1,19 +1,20 @@
-$schema: https://raw.githubusercontent.com/F5Networks/f5-appsvcs-extension/master/schema/3.53.0/as3-schema.json
+$schema: {{ as3_schema_url }}
 class: AS3
 declaration:
     class: ADC
-    schemaVersion: 3.53.0
-    id: declaration-0
-    updateMode: complete
-{% if tenants is defined and tenants is not none %}
-{%     if global.tenants is defined and global.tenants is not none %}
-{%         set tenants = global.tenants | combine(tenants, recursive=True, list_merge='append_rp') %}
-{%     endif %}
-{%     for tenant in tenants %}
-{%         if tenants[tenant].apps is defined and tenants[tenant].apps | length > 0 %}
+    schemaVersion: {{ as3_schema_version }}
+    id: declaration-{{ inventory_hostname }}
+    updateMode: {{ as3_update_mode }}
+{% set tenant_declaration = tenants | default({}) %}
+{% if global is defined and global.tenants is defined and global.tenants is not none %}
+{%     set tenant_declaration = global.tenants | combine(tenant_declaration, recursive=True, list_merge='append_rp') %}
+{% endif %}
+{% if tenant_declaration is defined and tenant_declaration is not none %}
+{%     for tenant in tenant_declaration %}
+{%         if tenant_declaration[tenant].apps is defined and tenant_declaration[tenant].apps | length > 0 %}
     {{ tenant }}:
         class: Tenant
-{%             for app in tenants[tenant].apps | sort %}
+{%             for app in tenant_declaration[tenant].apps | sort %}
         {{ app }}:
             class: Application
 {%                 set app_vars = hostvars[inventory_hostname][app]%}
@@ -24,16 +25,17 @@ declaration:
 {%         endif %}
 {%     endfor %}
 {% endif %}
-{% if common is defined and common is not none %}
-{%     if global.common is defined and global.common is not none %}
-{%         set common = global.common | combine(common, recursive=True, list_merge='append_rp') %}
-{%     endif %}
+{% set common_declaration = common | default({}) %}
+{% if global is defined and global.common is defined and global.common is not none %}
+{%     set common_declaration = global.common | combine(common_declaration, recursive=True, list_merge='append_rp') %}
+{% endif %}
+{% if common_declaration is defined and common_declaration is not none and common_declaration.objects is defined and common_declaration.objects | length > 0 %}
     Common:
         class: Tenant
         Shared:
             class: Application
             template: shared
-{%     for object in common.objects | sort %}
+{%     for object in common_declaration.objects | sort %}
 {%         with vars = hostvars[inventory_hostname][object] %}
 {%             filter indent(width=12, first=True) %}
 {%                 include 'app/objects/' ~ vars.object ~ '.j2' %}

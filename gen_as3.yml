@@ -1,6 +1,6 @@
 ---
 - name: Build BIGIP configuration
-  hosts: all
+  hosts: bigip
   connection: local
   gather_facts: no
 
@@ -15,6 +15,6 @@
         - "{{ backup_dir }}/yaml"
       run_once: yes
 
-    - name: generate AS3
+    - name: Generate AS3
       import_role:
         name: bigip_as3_gen

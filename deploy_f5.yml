@@ -59,4 +59,3 @@
         name: "{{ vm_name }}"
         state: poweredon
       delegate_to: localhost
-

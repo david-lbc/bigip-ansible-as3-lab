@@ -19,7 +19,7 @@
 {% elif vars.snat is defined and vars.snat is string %}
     snat: {{ vars.snat }}
 {% endif %}
-{% if vars.fw.enforced is defined %}
+{% if vars.fw is defined and vars.fw.enforced is defined %}
     policyFirewallEnforced:
         - bigip: {{ vars.fw.enforced }}
 {% endif %}

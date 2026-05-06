@@ -1,0 +1,13 @@
+---
+extends: default
+
+ignore: |
+  .venv/
+  backup/
+  collections/ansible_collections/
+
+rules:
+  comments: disable
+  document-start: disable
+  line-length: disable
+  truthy: disable

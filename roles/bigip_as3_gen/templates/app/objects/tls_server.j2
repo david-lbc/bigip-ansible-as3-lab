@@ -1,7 +1,7 @@
 {{ vars.name }}:
     class: TLS_Server
 {% if vars.cipherGroup is defined %}
-    cipherGroup: 
+    cipherGroup:
         bigip: {{ vars.cipherGroup }}
 {% endif %}
     certificates:

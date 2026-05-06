@@ -1,10 +1,10 @@
 ---
 - name: Deploy BIGIP Base configuration
-  hosts: all
+  hosts: bigip
   connection: local
   gather_facts: no
 
   tasks:
-    - name: Deploy DO
+    - name: Deploy DO declaration
       import_role:
         name: bigip_do_deploy

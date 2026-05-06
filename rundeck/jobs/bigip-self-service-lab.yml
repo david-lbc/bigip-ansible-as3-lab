@@ -1,0 +1,234 @@
+---
+- defaultTab: output
+  description: Check AS3 and Declarative Onboarding info endpoints.
+  executionEnabled: true
+  group: BIG-IP Lab/00 Readiness
+  loglevel: INFO
+  name: 00 - Check Automation Toolchain readiness
+  nodeFilterEditable: false
+  options:
+    - name: limit
+      description: Ansible inventory host or group.
+      value: bigip1
+  scheduleEnabled: true
+  sequence:
+    keepgoing: false
+    strategy: node-first
+    commands:
+      - exec: cd /home/rundeck/lab && ansible-playbook atc_check_playbook.yml --limit '${option.limit}'
+
+- defaultTab: output
+  description: Check whether the BIG-IP responds to the DO info endpoint.
+  executionEnabled: true
+  group: BIG-IP Lab/01 Base Config
+  loglevel: INFO
+  name: 01 - Check DO readiness
+  nodeFilterEditable: false
+  options:
+    - name: limit
+      description: Ansible inventory host or group.
+      value: bigip1
+  scheduleEnabled: true
+  sequence:
+    keepgoing: false
+    strategy: node-first
+    commands:
+      - exec: cd /home/rundeck/lab && ansible-playbook do_check_playbook.yml --limit '${option.limit}'
+
+- defaultTab: output
+  description: Render a Declarative Onboarding declaration for base config.
+  executionEnabled: true
+  group: BIG-IP Lab/01 Base Config
+  loglevel: INFO
+  name: 02 - Generate DO base config
+  nodeFilterEditable: false
+  options:
+    - name: limit
+      description: Ansible inventory host or group.
+      value: bigip1
+  scheduleEnabled: true
+  sequence:
+    keepgoing: false
+    strategy: node-first
+    commands:
+      - exec: cd /home/rundeck/lab && ansible-playbook gen_do.yml --limit '${option.limit}'
+
+- defaultTab: output
+  description: Deploy the generated Declarative Onboarding declaration.
+  executionEnabled: true
+  group: BIG-IP Lab/01 Base Config
+  loglevel: INFO
+  name: 03 - Deploy DO base config
+  nodeFilterEditable: false
+  options:
+    - name: limit
+      description: Ansible inventory host or group.
+      value: bigip1
+  scheduleEnabled: true
+  sequence:
+    keepgoing: false
+    strategy: node-first
+    commands:
+      - exec: cd /home/rundeck/lab && ansible-playbook deploy_do.yml --limit '${option.limit}'
+
+- defaultTab: output
+  description: Render AS3 app declarations from selected app templates.
+  executionEnabled: true
+  group: BIG-IP Lab/02 AS3 Apps
+  loglevel: INFO
+  name: 04 - Generate AS3 apps
+  nodeFilterEditable: false
+  options:
+    - name: limit
+      description: Ansible inventory host or group.
+      value: bigip1
+    - name: as3_apps
+      description: Comma-separated AS3 app variables to include.
+      value: APP-http-simple,APP-https-temp,APP-dns,APP-forward-net
+    - name: as3_tenant
+      description: AS3 tenant to update.
+      value: partition_1
+  scheduleEnabled: true
+  sequence:
+    keepgoing: false
+    strategy: node-first
+    commands:
+      - exec: cd /home/rundeck/lab && python3 scripts/as3_apps_extra_vars.py '${option.as3_apps}' '${option.as3_tenant}' > /tmp/as3-extra-vars.json && ansible-playbook gen_as3.yml --limit '${option.limit}' -e @/tmp/as3-extra-vars.json
+
+- defaultTab: output
+  description: Print a bounded summary of generated lab artifacts.
+  executionEnabled: true
+  group: BIG-IP Lab/02 AS3 Apps
+  loglevel: INFO
+  name: 05 - Review generated artifacts
+  nodeFilterEditable: false
+  options:
+    - name: limit
+      description: Ansible inventory host or group.
+      value: bigip1
+  scheduleEnabled: true
+  sequence:
+    keepgoing: false
+    strategy: node-first
+    commands:
+      - exec: cd /home/rundeck/lab && ansible-playbook artifact_summary_playbook.yml --limit '${option.limit}'
+
+- defaultTab: output
+  description: Ask AS3 to validate the generated declaration without deploying.
+  executionEnabled: true
+  group: BIG-IP Lab/02 AS3 Apps
+  loglevel: INFO
+  name: 06 - AS3 dry run
+  nodeFilterEditable: false
+  options:
+    - name: limit
+      description: Ansible inventory host or group.
+      value: bigip1
+  scheduleEnabled: true
+  sequence:
+    keepgoing: false
+    strategy: node-first
+    commands:
+      - exec: cd /home/rundeck/lab && ansible-playbook as3_dry_run_playbook.yml --limit '${option.limit}'
+
+- defaultTab: output
+  description: Deploy the generated AS3 app declaration.
+  executionEnabled: true
+  group: BIG-IP Lab/02 AS3 Apps
+  loglevel: INFO
+  name: 07 - Deploy AS3 apps
+  nodeFilterEditable: false
+  options:
+    - name: limit
+      description: Ansible inventory host or group.
+      value: bigip1
+  scheduleEnabled: true
+  sequence:
+    keepgoing: false
+    strategy: node-first
+    commands:
+      - exec: cd /home/rundeck/lab && ansible-playbook deploy_as3.yml --limit '${option.limit}'
+
+- defaultTab: output
+  description: Render a preview of the non-AS3 module deployment shape.
+  executionEnabled: true
+  group: BIG-IP Lab/03 Non-AS3 Apps
+  loglevel: INFO
+  name: 08 - Preview imperative app
+  nodeFilterEditable: false
+  options:
+    - name: limit
+      description: Ansible inventory host or group.
+      value: bigip1
+  scheduleEnabled: true
+  sequence:
+    keepgoing: false
+    strategy: node-first
+    commands:
+      - exec: cd /home/rundeck/lab && ansible-playbook imperative_preview_playbook.yml --limit '${option.limit}'
+
+- defaultTab: output
+  description: Deploy the non-AS3 app shape with f5networks.f5_modules.
+  executionEnabled: true
+  group: BIG-IP Lab/03 Non-AS3 Apps
+  loglevel: INFO
+  name: 09 - Deploy imperative app
+  nodeFilterEditable: false
+  options:
+    - name: limit
+      description: Ansible inventory host or group.
+      value: bigip1
+    - name: save_config
+      description: Save the BIG-IP config after deployment.
+      values:
+        - "false"
+        - "true"
+      value: "false"
+  scheduleEnabled: true
+  sequence:
+    keepgoing: false
+    strategy: node-first
+    commands:
+      - exec: cd /home/rundeck/lab && ansible-playbook imperative_deploy_playbook.yml --limit '${option.limit}' -e imperative_save_config=${option.save_config}
+
+- defaultTab: output
+  description: Remove lab AS3 tenant declarations.
+  executionEnabled: true
+  group: BIG-IP Lab/04 Cleanup
+  loglevel: INFO
+  name: 10 - Cleanup AS3 lab tenants
+  nodeFilterEditable: false
+  options:
+    - name: limit
+      description: Ansible inventory host or group.
+      value: bigip1
+  scheduleEnabled: true
+  sequence:
+    keepgoing: false
+    strategy: node-first
+    commands:
+      - exec: cd /home/rundeck/lab && ansible-playbook as3_cleanup_playbook.yml --limit '${option.limit}'
+
+- defaultTab: output
+  description: Remove the non-AS3 lab virtual server and pool objects.
+  executionEnabled: true
+  group: BIG-IP Lab/04 Cleanup
+  loglevel: INFO
+  name: 11 - Cleanup imperative app
+  nodeFilterEditable: false
+  options:
+    - name: limit
+      description: Ansible inventory host or group.
+      value: bigip1
+    - name: save_config
+      description: Save the BIG-IP config after cleanup.
+      values:
+        - "false"
+        - "true"
+      value: "false"
+  scheduleEnabled: true
+  sequence:
+    keepgoing: false
+    strategy: node-first
+    commands:
+      - exec: cd /home/rundeck/lab && ansible-playbook imperative_cleanup_playbook.yml --limit '${option.limit}' -e imperative_save_config=${option.save_config}

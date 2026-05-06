@@ -1,12 +1,7 @@
 ---
 collections:
   - name: ansible.utils
-    version: "2.9.0"  # For additional utilities that may be useful.
+    version: 6.0.0
+  - name: f5networks.f5_modules
+    version: 1.39.0
   - name: community.vmware
-
-roles:
-  # Add any specific roles from Galaxy or a Git repository if required.
-  # Example:
-  # - name: my_custom_role
-  #   src: https://github.com/myrepo/my_custom_role.git
-  #   version: "v1.0.0"

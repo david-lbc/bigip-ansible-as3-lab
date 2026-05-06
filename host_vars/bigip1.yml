@@ -1,8 +1,11 @@
 tenants:
   partition_1:
     apps:
+      - APP-http-simple
+      - APP-https-temp
+      - APP-dns
       - APP-forward-net
-  
+
 common:
   objects:
     - FL4-forward

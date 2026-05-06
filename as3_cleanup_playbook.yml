@@ -1,0 +1,48 @@
+---
+- name: Remove lab AS3 tenants
+  hosts: bigip
+  connection: local
+  gather_facts: no
+
+  tasks:
+    - name: Remove AS3 lab tenant declarations
+      uri:
+        url: >-
+          https://{{ ansible_host }}:{{ bigip_mgmt_port }}/mgmt/shared/appsvcs/declare/{{ as3_cleanup_tenants | join(',') }}?async=true
+        method: DELETE
+        user: "{{ admin_user }}"
+        password: "{{ admin_password }}"
+        validate_certs: "{{ bigip_validate_certs }}"
+        status_code: [200, 202, 204]
+      register: as3_cleanup_submit
+      no_log: "{{ bigip_hide_sensitive_logs | default(true) }}"
+
+    - name: Wait for AS3 cleanup completion
+      uri:
+        url: >-
+          https://{{ ansible_host }}:{{ bigip_mgmt_port }}/mgmt/shared/appsvcs/task/{{ as3_cleanup_submit.json.id }}
+        status_code: 200
+        user: "{{ admin_user }}"
+        password: "{{ admin_password }}"
+        validate_certs: "{{ bigip_validate_certs }}"
+      register: as3_cleanup_response
+      no_log: "{{ bigip_hide_sensitive_logs | default(true) }}"
+      until: >
+        as3_cleanup_response.json.results |
+        selectattr("message", "equalto", "in progress") |
+        list |
+        count < 1
+      retries: 10
+      delay: 10
+      when: as3_cleanup_submit.json.id is defined
+
+    - name: Print AS3 cleanup result
+      debug:
+        msg:
+          device: "{{ inventory_hostname }}"
+          removed_tenants: "{{ as3_cleanup_tenants }}"
+          status: >-
+            {{
+              (as3_cleanup_response.json | default({})).results
+              | default((as3_cleanup_submit.json | default({})).results | default([]))
+            }}

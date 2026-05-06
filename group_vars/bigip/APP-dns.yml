@@ -1,9 +1,9 @@
 APP-dns:
   type: dns
   tcp:
-    name: VS-dns
+    name: VS-dns-tcp
   udp:
-    name: VS-dns
+    name: VS-dns-udp
   snat: none
   persistenceMethods: none
   pool:

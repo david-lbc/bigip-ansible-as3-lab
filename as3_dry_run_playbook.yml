@@ -1,0 +1,78 @@
+---
+- name: Run AS3 dry-run validation on BIG-IP
+  hosts: bigip
+  connection: local
+  gather_facts: no
+
+  tasks:
+    - name: Require generated AS3 JSON
+      stat:
+        path: "{{ backup_dir }}/json/{{ inventory_hostname }}.json"
+      register: as3_declaration_file
+
+    - name: Stop when AS3 declaration has not been generated
+      assert:
+        that:
+          - as3_declaration_file.stat.exists
+        fail_msg: "Run ansible-playbook gen_as3.yml before AS3 dry-run."
+
+    - name: Load AS3 declaration
+      set_fact:
+        as3_dry_run_body: >-
+          {{
+            lookup('file', backup_dir ~ '/json/' ~ inventory_hostname ~ '.json')
+            | from_json
+            | combine({'action': 'dry-run'})
+          }}
+
+    - name: Submit AS3 dry-run
+      uri:
+        url: >-
+          https://{{ ansible_host }}:{{ bigip_mgmt_port }}/mgmt/shared/appsvcs/declare?async=true
+        method: POST
+        user: "{{ admin_user }}"
+        password: "{{ admin_password }}"
+        validate_certs: "{{ bigip_validate_certs }}"
+        body: "{{ as3_dry_run_body }}"
+        body_format: json
+        status_code: [200, 202]
+      register: as3_dry_run_submit
+      no_log: "{{ bigip_hide_sensitive_logs | default(true) }}"
+
+    - name: Wait for AS3 dry-run completion
+      uri:
+        url: >-
+          https://{{ ansible_host }}:{{ bigip_mgmt_port }}/mgmt/shared/appsvcs/task/{{ as3_dry_run_submit.json.id }}
+        status_code: 200
+        user: "{{ admin_user }}"
+        password: "{{ admin_password }}"
+        validate_certs: "{{ bigip_validate_certs }}"
+      register: as3_dry_run_response
+      no_log: "{{ bigip_hide_sensitive_logs | default(true) }}"
+      until: >
+        as3_dry_run_response.json.results |
+        selectattr("message", "equalto", "in progress") |
+        list |
+        count < 1
+      retries: 10
+      delay: 10
+      when: as3_dry_run_submit.json.id is defined
+
+    - name: Print AS3 dry-run result
+      debug:
+        msg:
+          device: "{{ inventory_hostname }}"
+          result: >-
+            {{
+              (as3_dry_run_response.json | default({})).results
+              | default((as3_dry_run_submit.json | default({})).results | default([]))
+            }}
+      failed_when: >
+        (
+          (as3_dry_run_response.json | default({})).results
+          | default((as3_dry_run_submit.json | default({})).results | default([]))
+          | selectattr("message", "ne", "success")
+          | selectattr("message", "ne", "no change")
+          | list
+          | count
+        ) >= 1

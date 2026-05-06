@@ -1,6 +1,6 @@
 ---
 - name: Deploy BIGIP configuration
-  hosts: all
+  hosts: bigip
   connection: local
   gather_facts: no
 

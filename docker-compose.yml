@@ -1,0 +1,19 @@
+---
+services:
+  rundeck:
+    build:
+      context: .
+      dockerfile: rundeck/Dockerfile
+    ports:
+      - "${RUNDECK_PORT:-4440}:4440"
+    environment:
+      RUNDECK_GRAILS_URL: "http://localhost:${RUNDECK_PORT:-4440}"
+      RUNDECK_SERVER_ADDRESS: 0.0.0.0
+      RUNDECK_SERVER_FORWARDED: "true"
+    volumes:
+      - ./:/home/rundeck/lab
+      - rundeck_data:/home/rundeck/server/data
+    working_dir: /home/rundeck/lab
+
+volumes:
+  rundeck_data:

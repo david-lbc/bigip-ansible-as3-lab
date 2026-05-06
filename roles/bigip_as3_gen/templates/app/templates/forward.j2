@@ -6,7 +6,7 @@
 {% if app_vars.iRules is defined %}
 {%     for irule in app_vars.iRules %}
 {%         if irule.location is not defined or irule.location != "common" %}
-{%             with vars = app_vars.iRules %}
+{%             with vars = irule %}
 {%                 include 'app/objects/irule.j2' %}
 {%             endwith %}
 {%         endif %}
@@ -23,7 +23,7 @@
 {% endif %}
 {# SNAT_Pool #}
 {% if app_vars.snat is defined and app_vars.snat.snatAddresses is defined %}
-{%     with vars = app_vars.profile.snat %}
+{%     with vars = app_vars.snat %}
 {%         include 'app/objects/snat_pool.j2' %}
 {%     endwith %}
 {% endif %}

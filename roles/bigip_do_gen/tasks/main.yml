@@ -1,21 +1,29 @@
-- name: Template DO
-  template:
-    src: "f5_do_template.j2"
-    dest: "{{ backup_dir }}/yaml/{{ inventory_hostname }}_do.yml"
-  diff: yes
-  
+---
+- name: Require DO base config variables
+  assert:
+    that:
+      - bigip_do is defined
+      - bigip_do is mapping
+    fail_msg: "Define bigip_do in group_vars or host_vars before generating a DO declaration."
 
-- name: Set facts from generated yaml
-  shell: "cat {{ backup_dir }}/yaml/{{ inventory_hostname }}_do.yml"
-  register: yaml_result
-  changed_when: false
+- name: Template DO declaration
+  template:
+    src: declaration.yml.j2
+    dest: "{{ do_backup_dir }}/yaml/{{ inventory_hostname }}.yml"
+  diff: yes
+
+- name: Load generated DO YAML
+  set_fact:
+    generated_do_declaration: "{{ lookup('file', do_backup_dir ~ '/yaml/' ~ inventory_hostname ~ '.yml') | from_yaml }}"
+
+- name: Require DO declaration envelope
+  assert:
+    that:
+      - generated_do_declaration.class == 'Device'
+      - generated_do_declaration.Common.class == 'Tenant'
+    fail_msg: "Generated DO declaration is missing the required Device/Common envelope."
 
 - name: Generate DO in JSON
   copy:
-    content: "{{ yaml_result.stdout | from_yaml | to_nice_json }}"
-    dest: "{{ backup_dir }}/json/{{ inventory_hostname }}_do.json"
-
-- name: Validate DO using jsonschema
-  ansible.utils.validate:
-    data: "{{ lookup('file', '{{ backup_dir }}/json/{{ inventory_hostname }}_do.json') }}"
-    criteria: "{{ lookup('file', '{{ role_path }}/base.schema.json') }}"
+    content: "{{ generated_do_declaration | to_nice_json }}"
+    dest: "{{ do_backup_dir }}/json/{{ inventory_hostname }}.json"

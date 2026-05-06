@@ -1,7 +1,7 @@
 tenants:
   partition_1:
-    apps:
-  
+    apps: []
+
 common:
   objects:
     - FL4-forward
