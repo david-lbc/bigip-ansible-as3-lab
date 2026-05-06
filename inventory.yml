@@ -6,5 +6,11 @@ all:
           ansible_host: 192.168.86.154
 
   vars:
-    admin_user: admin
-    admin_password: admin
+    admin_user: "{{ lookup('env', 'BIGIP_ADMIN_USER') | default('admin', true) }}"
+    admin_password: "{{ lookup('env', 'BIGIP_ADMIN_PASSWORD') | default('admin', true) }}"
+
+local:
+  hosts:
+    localhost:
+      ansible_connection: local
+

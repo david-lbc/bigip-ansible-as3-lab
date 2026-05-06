@@ -1,0 +1,58 @@
+---
+name: Lab validation
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v5
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - name: Install Python dependencies
+        run: pip install -r requirements.txt
+
+      - name: Install Ansible collections
+        run: ansible-galaxy collection install -r collections/requirements.yml -p ./collections
+
+      - name: Run playbook syntax checks
+        run: |
+          for playbook in \
+            atc_check_playbook.yml \
+            do_check_playbook.yml \
+            do_gen_playbook.yml \
+            do_deploy_playbook.yml \
+            gen_playbook.yml \
+            as3_dry_run_playbook.yml \
+            deploy_playbook.yml \
+            as3_cleanup_playbook.yml \
+            artifact_summary_playbook.yml \
+            imperative_preview_playbook.yml \
+            imperative_deploy_playbook.yml \
+            imperative_cleanup_playbook.yml; do
+            ansible-playbook --syntax-check "$playbook"
+          done
+
+      - name: Run non-mutating generation checks
+        run: |
+          ansible-playbook do_gen_playbook.yml
+          ansible-playbook gen_playbook.yml
+          ansible-playbook imperative_preview_playbook.yml
+          ansible-playbook artifact_summary_playbook.yml
+
+      - name: Lint YAML
+        run: yamllint .
+
+      - name: Validate Docker Compose
+        run: docker compose config

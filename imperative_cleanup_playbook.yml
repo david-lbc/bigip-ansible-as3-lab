@@ -1,0 +1,10 @@
+---
+- name: Remove non-AS3 BIG-IP module deployment
+  hosts: bigip
+  connection: local
+  gather_facts: no
+
+  tasks:
+    - name: Remove imperative BIG-IP objects
+      import_role:
+        name: bigip_imperative_cleanup

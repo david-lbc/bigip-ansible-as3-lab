@@ -1,0 +1,13 @@
+---
+- name: Require imperative app variables
+  assert:
+    that:
+      - imperative_apps is defined
+      - imperative_apps | length > 0
+    fail_msg: "Define imperative_apps before rendering the non-AS3 preview."
+
+- name: Render imperative deployment preview
+  template:
+    src: plan.yml.j2
+    dest: "{{ imperative_backup_dir }}/{{ inventory_hostname }}.yml"
+  diff: yes

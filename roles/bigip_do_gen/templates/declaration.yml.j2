@@ -1,0 +1,128 @@
+schemaVersion: "{{ bigip_do.schemaVersion | default('1.0.0') }}"
+class: Device
+async: {{ bigip_do.async | default(true) | bool | lower }}
+label: "{{ bigip_do.label | default('BIG-IP lab Declarative Onboarding declaration') }}"
+Common:
+  class: Tenant
+{% if bigip_do.system is defined %}
+  system:
+    class: System
+{%     if bigip_do.system.hostname is defined %}
+    hostname: "{{ bigip_do.system.hostname }}"
+{%     endif %}
+{%     if bigip_do.system.cliInactivityTimeout is defined %}
+    cliInactivityTimeout: {{ bigip_do.system.cliInactivityTimeout }}
+{%     endif %}
+{%     if bigip_do.system.consoleInactivityTimeout is defined %}
+    consoleInactivityTimeout: {{ bigip_do.system.consoleInactivityTimeout }}
+{%     endif %}
+{%     if bigip_do.system.autoCheck is defined %}
+    autoCheck: {{ bigip_do.system.autoCheck | bool | lower }}
+{%     endif %}
+{%     if bigip_do.system.autoPhonehome is defined %}
+    autoPhonehome: {{ bigip_do.system.autoPhonehome | bool | lower }}
+{%     endif %}
+{% endif %}
+{% if bigip_do.dns is defined %}
+  dns:
+    class: DNS
+{%     if bigip_do.dns.nameServers is defined %}
+    nameServers:
+{%         for server in bigip_do.dns.nameServers %}
+      - "{{ server }}"
+{%         endfor %}
+{%     endif %}
+{%     if bigip_do.dns.search is defined %}
+    search:
+{%         for domain in bigip_do.dns.search %}
+      - "{{ domain }}"
+{%         endfor %}
+{%     endif %}
+{% endif %}
+{% if bigip_do.ntp is defined %}
+  ntp:
+    class: NTP
+{%     if bigip_do.ntp.servers is defined %}
+    servers:
+{%         for server in bigip_do.ntp.servers %}
+      - "{{ server }}"
+{%         endfor %}
+{%     endif %}
+{%     if bigip_do.ntp.timezone is defined %}
+    timezone: "{{ bigip_do.ntp.timezone }}"
+{%     endif %}
+{% endif %}
+{% if bigip_do.provision is defined %}
+  provisioning:
+    class: Provision
+{%     for module in bigip_do.provision | sort %}
+    {{ module }}: "{{ bigip_do.provision[module] }}"
+{%     endfor %}
+{% endif %}
+{% if bigip_do.vlans is defined %}
+{%     for vlan in bigip_do.vlans %}
+  {{ vlan.name }}:
+    class: VLAN
+{%         if vlan.tag is defined %}
+    tag: {{ vlan.tag }}
+{%         endif %}
+{%         if vlan.mtu is defined %}
+    mtu: {{ vlan.mtu }}
+{%         endif %}
+{%         if vlan.cmpHash is defined %}
+    cmp-hash: "{{ vlan.cmpHash }}"
+{%         endif %}
+{%         if vlan.interfaces is defined %}
+    interfaces:
+{%             for interface in vlan.interfaces %}
+      - name: "{{ interface.name }}"
+{%                 if interface.tagged is defined %}
+        tagged: {{ interface.tagged | bool | lower }}
+{%                 endif %}
+{%             endfor %}
+{%         endif %}
+{%     endfor %}
+{% endif %}
+{% if bigip_do.self_ips is defined %}
+{%     for self_ip in bigip_do.self_ips %}
+  {{ self_ip.name }}:
+    class: SelfIp
+    address: "{{ self_ip.address }}"
+    vlan: "{{ self_ip.vlan }}"
+{%         if self_ip.allowService is defined %}
+    allowService: {{ self_ip.allowService | to_json }}
+{%         endif %}
+{%         if self_ip.trafficGroup is defined %}
+    trafficGroup: "{{ self_ip.trafficGroup }}"
+{%         endif %}
+{%     endfor %}
+{% endif %}
+{% if bigip_do.routes is defined %}
+{%     for route in bigip_do.routes %}
+  {{ route.name }}:
+    class: Route
+    gw: "{{ route.gw }}"
+{%         if route.network is defined %}
+    network: "{{ route.network }}"
+{%         endif %}
+{%         if route.mtu is defined %}
+    mtu: {{ route.mtu }}
+{%         endif %}
+{%     endfor %}
+{% endif %}
+{% if bigip_do.management_routes is defined %}
+{%     for route in bigip_do.management_routes %}
+  {{ route.name }}:
+    class: ManagementRoute
+    gw: "{{ route.gw }}"
+{%         if route.network is defined %}
+    network: "{{ route.network }}"
+{%         endif %}
+{%         if route.type is defined %}
+    type: "{{ route.type }}"
+{%         endif %}
+{%         if route.mtu is defined %}
+    mtu: {{ route.mtu }}
+{%         endif %}
+{%     endfor %}
+{% endif %}

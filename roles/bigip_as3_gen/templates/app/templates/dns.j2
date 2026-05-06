@@ -1,18 +1,14 @@
 {# Service_TCP #}
 {% if app_vars.tcp is defined %}
-{%     with vars = app_vars.copy() | combine(app_vars.tcp, recursive=True, list_merge='append_rp') %}
-{%         if vars.port is not defined %}
-{%             do vars.update({"port": 53}) %}
-{%         endif %}
+{%     set tcp_defaults = {'port': 53} %}
+{%     with vars = tcp_defaults | combine(app_vars, recursive=True, list_merge='append_rp') | combine(app_vars.tcp, recursive=True, list_merge='append_rp') %}
 {%         include 'app/objects/service_tcp.j2' %}
 {%     endwith %}
 {% endif %}
 {# Service_UDP #}
 {% if app_vars.udp is defined %}
-{%     with vars = app_vars.copy() | combine(app_vars.udp, recursive=True, list_merge='append_rp') %}
-{%         if vars.port is not defined %}
-{%             do vars.update({"port": 53}) %}
-{%         endif %}
+{%     set udp_defaults = {'port': 53} %}
+{%     with vars = udp_defaults | combine(app_vars, recursive=True, list_merge='append_rp') | combine(app_vars.udp, recursive=True, list_merge='append_rp') %}
 {%         include 'app/objects/service_udp.j2' %}
 {%     endwith %}
 {% endif %}

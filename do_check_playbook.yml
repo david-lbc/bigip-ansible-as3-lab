@@ -1,0 +1,37 @@
+---
+- name: Check BIG-IP Declarative Onboarding readiness
+  hosts: bigip
+  connection: local
+  gather_facts: no
+
+  tasks:
+    - name: Read DO info endpoint
+      uri:
+        url: >-
+          https://{{ ansible_host }}:{{ bigip_mgmt_port }}/mgmt/shared/declarative-onboarding/info
+        method: GET
+        user: "{{ admin_user }}"
+        password: "{{ admin_password }}"
+        validate_certs: "{{ bigip_validate_certs }}"
+        status_code: [200, 404]
+      register: do_info
+      failed_when: false
+      no_log: "{{ bigip_hide_sensitive_logs | default(true) }}"
+
+    - name: Report DO readiness
+      debug:
+        msg:
+          device: "{{ inventory_hostname }}"
+          endpoint_status: "{{ do_info.status | default('unknown') }}"
+          readiness: >-
+            {{
+              'installed_or_reachable'
+              if do_info.status == 200
+              else 'not_installed_or_unreachable'
+            }}
+          next_step: >-
+            {{
+              'run gen_do.yml then deploy_do.yml'
+              if do_info.status == 200
+              else 'install Declarative Onboarding before deploying base config'
+            }}

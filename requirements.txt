@@ -1,0 +1,6 @@
+ansible-core==2.20.5
+jsonschema==4.26.0
+jmespath==1.0.1
+packaging==25.0
+requests==2.32.5
+yamllint==1.38.0

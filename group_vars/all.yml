@@ -1,7 +1,30 @@
-backup_dir: "{{ playbook_dir }}/backup"
+backup_root: "{{ playbook_dir }}/backup"
+backup_dir: "{{ backup_root }}/as3"
+do_backup_dir: "{{ backup_root }}/do"
+imperative_backup_dir: "{{ backup_root }}/imperative"
+
+bigip_mgmt_port: "{{ lookup('env', 'BIGIP_MGMT_PORT') | default('443', true) }}"
+bigip_validate_certs: false
+bigip_provider:
+  server: "{{ ansible_host }}"
+  server_port: "{{ bigip_mgmt_port | int }}"
+  user: "{{ admin_user }}"
+  password: "{{ admin_password }}"
+  validate_certs: "{{ bigip_validate_certs }}"
+
+as3_schema_url: https://raw.githubusercontent.com/F5Networks/f5-appsvcs-extension/master/schema/3.26.1/as3-schema.json
+as3_schema_version: 3.26.0
+as3_update_mode: selective
+as3_cleanup_tenants:
+  - partition_1
+
+imperative_save_config: false
 
 global:
   common:
     objects:
+      - DNS-google
       - FL4-forward
-      - profiles
+      - ICMP-node
+      - TCP-lan
+      - UDP-dns

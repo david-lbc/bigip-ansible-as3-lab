@@ -1,0 +1,47 @@
+---
+- name: Check BIG-IP Automation Toolchain readiness
+  hosts: bigip
+  connection: local
+  gather_facts: no
+
+  vars:
+    atc_extensions:
+      - name: AS3
+        endpoint: /mgmt/shared/appsvcs/info
+        install_hint: Install Application Services 3 before AS3 app deploys.
+      - name: DO
+        endpoint: /mgmt/shared/declarative-onboarding/info
+        install_hint: Install Declarative Onboarding before base-config deploys.
+
+  tasks:
+    - name: Read Automation Toolchain info endpoints
+      uri:
+        url: "https://{{ ansible_host }}:{{ bigip_mgmt_port }}{{ item.endpoint }}"
+        method: GET
+        user: "{{ admin_user }}"
+        password: "{{ admin_password }}"
+        validate_certs: "{{ bigip_validate_certs }}"
+        status_code: [200, 404]
+      loop: "{{ atc_extensions }}"
+      register: atc_info
+      failed_when: false
+      no_log: "{{ bigip_hide_sensitive_logs | default(true) }}"
+
+    - name: Report Automation Toolchain readiness
+      debug:
+        msg: >-
+          {{
+            atc_info.results
+            | map(attribute='item')
+            | zip(atc_info.results | map(attribute='status'))
+            | list
+          }}
+
+    - name: Print operator guidance
+      debug:
+        msg:
+          device: "{{ inventory_hostname }}"
+          guidance:
+            - "HTTP 200 means the extension info endpoint responded."
+            - "HTTP 404 usually means that extension is not installed."
+            - "Connection errors usually mean management access is not ready."

@@ -1,4 +1,6 @@
 *.retry
-backup/json/*.json
-backup/yaml/*.yml
+backup/**/*.json
+backup/**/*.yml
 .env
+.venv/
+collections/ansible_collections/

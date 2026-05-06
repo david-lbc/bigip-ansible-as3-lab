@@ -1,0 +1,49 @@
+tenants:
+  partition_1:
+    apps: []
+
+common:
+  objects:
+    - FL4-forward
+
+label: "F5 Onboarding"
+hostname: "bigip-lab-02.lab.tpa.thelbc.io"
+license_type: "regKey"
+regKey: "HSPES-PVUOR-KVBIL-FARMD-GWRKOZB"
+dns_servers:
+  - "8.8.8.8"
+  - "8.8.4.4"
+search_domains:
+  - "local"
+  - "thelbc.io"
+  - "tpa.thelbc.io"
+  - "lab.tpa.thelbc.io"
+ntp_servers:
+  - "pool.ntp.org"
+timezone: "UTC"
+vlans:
+  internal:
+    tag: 4094
+    mtu: 1500
+    interfaces:
+      - name: "1.1"
+        tagged: false
+  external:
+    tag: 4093
+    mtu: 1500
+    interfaces:
+      - name: "1.2"
+        tagged: false
+self_ips:
+  self_internal:
+    address: "10.0.1.11/24"
+    vlan: "internal"
+    allow_service: "default"
+    traffic_group: "traffic-group-local-only"
+  self_external:
+    address: "10.0.2.11/24"
+    vlan: "external"
+    allow_service: "default"
+    traffic_group: "traffic-group-local-only"
+log_level: "info"
+trace: true

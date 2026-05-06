@@ -1,0 +1,16 @@
+---
+- name: Preview non-AS3 BIG-IP module deployment
+  hosts: bigip
+  connection: local
+  gather_facts: no
+
+  tasks:
+    - name: Generate imperative preview folder
+      file:
+        path: "{{ imperative_backup_dir }}"
+        state: directory
+      run_once: yes
+
+    - name: Render imperative deployment preview
+      import_role:
+        name: bigip_imperative_preview

@@ -1,30 +1,124 @@
-## BIGIP AS3 ansible templating tool
+# BIG-IP Ansible, AS3, DO, and Rundeck Lab
 
-Used for declaratively managing BIGIP configuration using AS3.
-It is not meant to be a fully complete AS3 templating tool. This is meant more of a base for your various application templates and to get you started in automating BIGIPs.
+This repo is a learning lab for different BIG-IP automation shapes. It is not
+intended to be a production opinion about how every BIG-IP should be managed.
 
-### Templates
+The lab shows four paths:
 
-The `bigip_as3_gen` role uses application templates (three are already provided (`https`, `dns`, `forward`)) to generate AS3 configuration using ansible variables with Jinja2.
+- Declarative Onboarding (DO) for base BIG-IP config such as DNS, NTP,
+  provisioning, VLANs, self IPs, and routes.
+- AS3 with Ansible and Jinja for declarative application services.
+- Non-AS3 Ansible modules for imperative, object-by-object deployment.
+- Rundeck Open Source as a self-service job catalog that runs the playbooks.
 
-You should be able to create your own templates easily under [roles/bigip_as3_gen/templates/app/templates](roles/bigip_as3_gen/templates/app/templates) using some of the already defined AS3 objects (some of the configuration may be different from what is specified in AS3 schema reference but it is kept as close as possible).
+## Local Quick Start
 
-### Requirements
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+ansible-galaxy collection install -r collections/requirements.yml -p ./collections
+```
 
-- `ansible-core==2.11.1`
-- `jsonschema==3.2.0`
-- `collections:`
-  - `name: ansible.utils`
-    `version: 2.2.0`
+The inventory defaults to `admin/admin` for a lab BIG-IP. Override without
+editing files when needed:
 
-#### Usage:
+```bash
+export BIGIP_ADMIN_USER=admin
+export BIGIP_ADMIN_PASSWORD=admin
+export BIGIP_MGMT_PORT=443
+```
 
-- Run `ansible-playbook gen_playbook.yml` to generate AS3 configs in `backup/` directory (directory is auto generated) in JSON and YAML format
-- Exchange correct credentials for BIGIP in `inventory.yml` and run `ansible-playbook deploy_playbook.yml` to deploy generated configuration to BIGIPs defined in inventory.yml
+Generate everything without deploying:
 
-#### Updating the validation schema
-The validation schema currently uses 3.26.1 version and it can be updated from [AS3 repo](https://github.com/F5Networks/f5-appsvcs-extension/tree/master/schema/latest).
-After replacing it in `roles/bigip_as3_gen/as3-schema.json`, you have to remove the `$id`, as it seems that having `URN` in `$id` causes errors, see [this issue](https://github.com/Julian/jsonschema/issues/544)
+```bash
+ansible-playbook atc_check_playbook.yml
+ansible-playbook gen_do.yml
+ansible-playbook gen_as3.yml
+ansible-playbook artifact_summary_playbook.yml
+ansible-playbook imperative_preview_playbook.yml
+```
 
-### Reference
-Can be found under [REFERENCE.md](REFERENCE.md)
+Deploy in the normal lab order:
+
+```bash
+ansible-playbook do_check_playbook.yml
+ansible-playbook gen_do.yml
+ansible-playbook deploy_do.yml
+ansible-playbook gen_as3.yml
+ansible-playbook as3_dry_run_playbook.yml
+ansible-playbook deploy_as3.yml
+```
+
+The non-AS3 example is separate on purpose:
+
+```bash
+ansible-playbook imperative_preview_playbook.yml
+ansible-playbook imperative_deploy_playbook.yml
+```
+
+Generated declarations and previews land under `backup/`.
+
+Cleanup examples:
+
+```bash
+ansible-playbook as3_cleanup_playbook.yml
+ansible-playbook imperative_cleanup_playbook.yml
+```
+
+## AS3 Apps
+
+The `bigip_as3_gen` role uses app templates under
+`roles/bigip_as3_gen/templates/app/templates`.
+
+Included AS3 app shapes:
+
+- `http`
+- `https`
+- `dns`
+- `forward`
+
+The default app list is in `host_vars/bigip1.yml`. Override it from the CLI or
+Rundeck:
+
+```bash
+ansible-playbook gen_as3.yml \
+  -e '{"tenants":{"partition_1":{"apps":["APP-http-simple","APP-dns"]}}}'
+```
+
+This lab defaults AS3 `updateMode` to `selective`, which means AS3 only updates
+tenants defined in the declaration instead of removing omitted tenants.
+
+## Rundeck
+
+Run the bundled Rundeck Open Source lab:
+
+```bash
+docker compose up --build
+```
+
+Then open `http://localhost:4440`. See `docs/RUNDECK_LAB.md` for project and
+job import steps.
+
+## Docs
+
+- `docs/DEPLOYMENT_SHAPES.md` explains which layer owns each kind of work.
+- `docs/RUNDECK_LAB.md` walks through the self-service Rundeck setup.
+- `docs/MCP_AI_EXERCISES.md` outlines optional MCP/AI learning exercises.
+- `labs/` contains short hands-on exercise guides.
+- `REFERENCE.md` keeps the detailed AS3 variable reference.
+
+## Reference
+
+The AS3 variable reference can be found under `REFERENCE.md`.
+
+## General Tips
+
+On macOS, if you see an error around `fork()`, set this in your shell profile:
+
+```bash
+export OBJC_DISABLE_INITIALIZE_FORK_SAFETY=YES
+```
+
+Some macOS Python environments also need extra care around VMware `pyVmomi`
+dependencies when using the optional OVA deployment playbook.

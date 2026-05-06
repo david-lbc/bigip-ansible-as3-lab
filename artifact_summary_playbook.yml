@@ -1,0 +1,19 @@
+---
+- name: Summarize generated lab artifacts
+  hosts: bigip
+  connection: local
+  gather_facts: no
+
+  tasks:
+    - name: Summarize generated artifacts
+      command:
+        cmd: >-
+          {{ playbook_dir }}/scripts/artifact_summary.py
+          --host {{ inventory_hostname }}
+          --backup-root {{ backup_root }}
+      register: artifact_summary
+      changed_when: false
+
+    - name: Print artifact summary
+      debug:
+        msg: "{{ artifact_summary.stdout | from_json }}"

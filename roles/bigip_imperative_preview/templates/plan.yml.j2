@@ -1,0 +1,45 @@
+device: "{{ inventory_hostname }}"
+deployment_shape: f5networks.f5_modules
+provider:
+  server: "{{ ansible_host }}"
+  validate_certs: {{ bigip_validate_certs | bool | lower }}
+apps:
+{% for app in imperative_apps %}
+  - name: "{{ app.name }}"
+    partition: "{{ app.partition | default('Common') }}"
+    virtual_server:
+      destination: "{{ app.destination }}"
+      port: {{ app.port }}
+{%     if app.snat is defined %}
+      snat: "{{ app.snat }}"
+{%     endif %}
+{%     if app.profiles is defined %}
+      profiles:
+{%         for profile in app.profiles %}
+        - {{ profile | to_json }}
+{%         endfor %}
+{%     endif %}
+{%     if app.enabled_vlans is defined %}
+      enabled_vlans:
+{%         for vlan in app.enabled_vlans %}
+        - "{{ vlan }}"
+{%         endfor %}
+{%     endif %}
+    pool:
+      name: "{{ app.pool.name }}"
+      lb_method: "{{ app.pool.lb_method | default('round-robin') }}"
+{%     if app.pool.monitors is defined %}
+      monitors:
+{%         for monitor in app.pool.monitors %}
+        - "{{ monitor }}"
+{%         endfor %}
+{%     endif %}
+{%     if app.pool.members is defined %}
+      members:
+{%         for member in app.pool.members %}
+        - name: "{{ member.name | default(member.addr) }}"
+          addr: "{{ member.addr }}"
+          port: {{ member.port }}
+{%         endfor %}
+{%     endif %}
+{% endfor %}

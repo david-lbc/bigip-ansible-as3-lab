@@ -1,0 +1,54 @@
+---
+- name: Require imperative app variables
+  assert:
+    that:
+      - imperative_apps is defined
+      - imperative_apps | length > 0
+    fail_msg: "Define imperative_apps before deploying non-AS3 objects."
+
+- name: Create or update pools
+  f5networks.f5_modules.bigip_pool:
+    name: "{{ item.pool.name }}"
+    partition: "{{ item.partition | default('Common') }}"
+    lb_method: "{{ item.pool.lb_method | default('round-robin') }}"
+    monitors: "{{ item.pool.monitors | default(omit) }}"
+    monitor_type: "{{ item.pool.monitor_type | default(omit) }}"
+    provider: "{{ bigip_provider }}"
+    state: present
+  loop: "{{ imperative_apps }}"
+  delegate_to: localhost
+
+- name: Create or update pool members
+  f5networks.f5_modules.bigip_pool_member:
+    pool: "{{ item.0.pool.name }}"
+    partition: "{{ item.0.partition | default('Common') }}"
+    name: "{{ item.1.name | default(item.1.addr) }}"
+    host: "{{ item.1.addr }}"
+    port: "{{ item.1.port }}"
+    provider: "{{ bigip_provider }}"
+    state: present
+  loop: "{{ imperative_apps | subelements('pool.members', skip_missing=True) }}"
+  delegate_to: localhost
+
+- name: Create or update virtual servers
+  f5networks.f5_modules.bigip_virtual_server:
+    name: "{{ item.name }}"
+    partition: "{{ item.partition | default('Common') }}"
+    destination: "{{ item.destination }}"
+    port: "{{ item.port }}"
+    pool: "{{ item.pool.name }}"
+    description: "{{ item.description | default(omit) }}"
+    snat: "{{ item.snat | default(omit) }}"
+    profiles: "{{ item.profiles | default(omit) }}"
+    enabled_vlans: "{{ item.enabled_vlans | default(omit) }}"
+    provider: "{{ bigip_provider }}"
+    state: present
+  loop: "{{ imperative_apps }}"
+  delegate_to: localhost
+
+- name: Save BIG-IP config when requested
+  f5networks.f5_modules.bigip_config:
+    save: true
+    provider: "{{ bigip_provider }}"
+  when: imperative_save_config | bool
+  delegate_to: localhost

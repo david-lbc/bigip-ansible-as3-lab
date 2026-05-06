@@ -1,0 +1,26 @@
+---
+imperative_apps:
+  - name: VS-imperative-http
+    partition: Common
+    destination: 10.50.50.2
+    port: 80
+    description: Lab VIP built with f5networks.f5_modules instead of AS3
+    snat: Automap
+    profiles:
+      - http
+      - tcp
+    enabled_vlans:
+      - /Common/vlan1
+    pool:
+      name: Pool-imperative-http
+      lb_method: least-connections-member
+      monitors:
+        - /Common/http
+      monitor_type: and_list
+      members:
+        - name: web-imperative-1
+          addr: 10.50.50.3
+          port: 80
+        - name: web-imperative-2
+          addr: 10.50.50.4
+          port: 80

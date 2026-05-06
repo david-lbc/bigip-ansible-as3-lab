@@ -1,4 +1,8 @@
 ##### Global BIGIP config tenant/common declaration
+Supported app templates in this lab are `http`, `https`, `dns`, and
+`forward`. The older `psql` notes below are retained as a design sketch, but
+there is no `psql.j2` template wired in this repo yet.
+
 These should be defined in `group_vars/all.yml` or under `group_vars/all/`.
 
 They will be used in every BIGIP AS3 configuration and can be overriden by individual BIGIP AS3 configs.
@@ -37,7 +41,7 @@ Supported AS3 objects can be found under [roles/bigip_as3_gen/templates/app/obje
 ```yaml
 < custom_as3_object_name >:
   name: < object_name > # This name will be the one that is actually used
-  type: < as3_object >
+  object: < as3_object >
   # Rest of the configuration is the same as actual AS3 object (not all options are supported)
   ...
 ```
@@ -54,6 +58,31 @@ Supported AS3 objects can be found under [roles/bigip_as3_gen/templates/app/obje
 ```
 
 ##### Application templates
+- **http**
+```yaml
+  persistenceMethods: < none > # Array for persistence, or none to disable
+    - < source-address | cookie | ... >
+  snat: < auto | none | self >
+  vips:
+    - ip: < IP_address >
+      source: < IP_address/Mask >
+  pool:
+    name: < string >
+    lbMode: < load_balancing_mode >
+    members:
+      - addr: < IP_address >
+        port: < port | integer >
+    monitors:
+      - name: < string or bigip_path >
+        location: < common >
+  profile:
+    http:
+      name: < string or bigip_path >
+    tcp:
+      name: < string or bigip_path >
+  vlans:
+    - < bigip_path >
+```
 - **https**
 ```yaml
   persistenceMethods: < none > # This can be aither an array (if using persistenceMethods) or none (when disabling them)

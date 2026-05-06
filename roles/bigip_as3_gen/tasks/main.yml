@@ -3,19 +3,18 @@
     src: "wrapper.j2"
     dest: "{{ backup_dir }}/yaml/{{ inventory_hostname }}.yml"
   diff: yes
-  failed_when: (tenants is not defined or tenants is none) and (common is not defined or common is none)
+  failed_when: (tenants is not defined or tenants is none) and (common is not defined or common is none) and (global.tenants is not defined) and (global.common is not defined)
 
-- name: Set facts from generated yaml
-  shell: "cat {{ backup_dir }}/yaml/{{ inventory_hostname }}.yml"
-  register: yaml_result
-  changed_when: false
+- name: Load generated AS3 YAML
+  set_fact:
+    generated_as3_declaration: "{{ lookup('file', backup_dir ~ '/yaml/' ~ inventory_hostname ~ '.yml') | from_yaml }}"
 
 - name: Generate AS3 in JSON
   copy:
-    content: "{{ yaml_result.stdout | from_yaml | to_nice_json }}"
+    content: "{{ generated_as3_declaration | to_nice_json }}"
     dest: "{{ backup_dir }}/json/{{ inventory_hostname }}.json"
 
 - name: Validate AS3 using jsonschema
   ansible.utils.validate:
-    data: "{{ lookup('file', '{{ backup_dir }}/json/{{ inventory_hostname }}.json') }}"
-    criteria: "{{ lookup('file', '{{ role_path }}/as3-schema.json') }}"
+    data: "{{ generated_as3_declaration }}"
+    criteria: "{{ lookup('file', role_path ~ '/as3-schema.json') }}"
